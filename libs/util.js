@@ -3,6 +3,7 @@
 var fs = require('fs')
 var Promise = require('bluebird')
 var xml2js = require('xml2js')
+var tpl = require('../wechat/tpl')
 
 exports.readFileAsync = function(fpath, encoding) {
   return new Promise((resolve, reject) => {
@@ -70,3 +71,23 @@ function formatMessage(result) {
 }
 
 exports.formatMessage = formatMessage
+
+exports.tpl = function(content, message) {
+  var info = {}
+  var type = 'text'
+  var fromUserName = message.ToUserName
+  var toUserName = message.FromUserName
+
+  if (Array.isArray(content)) {
+    type = 'news'
+  }
+
+  type = content.type || type
+  info.content = content
+  info.createTime = new Date().getTime()
+  info.msgType = type
+  info.toUserName = toUserName
+  info.fromUserName = fromUserName
+
+  return tpl.compiled(info)
+}
