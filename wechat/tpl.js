@@ -7,21 +7,21 @@ var tpl = heredoc(function() {/*
   <xml>
     <ToUserName><![CDATA[<%= toUserName %>]]></ToUserName>
     <FromUserName><![CDATA[<%= fromUserName  %>]]></FromUserName>
-    <CreateTime><% createTime %></CreateTime>
+    <CreateTime><%= createTime %></CreateTime>
     <MsgType><![CDATA[<%= msgType %>]]></MsgType> 
     <% if (msgType === 'text') { %>
       <Content><![CDATA[<%= content %>]]></Content>
     <% } else if (msgType === 'image') { %>
       <Image>
-        <MediaId><![CDATA[<%= content.media_id %>]]></MediaId>
+        <MediaId><![CDATA[<%= content.mediaId %>]]></MediaId>
       </Image>
     <% } else if (msgType === 'voice') { %>
       <Voice>
-        <MediaId><![CDATA[<%= content.media_id %>]]></MediaId>
+        <MediaId><![CDATA[<%= content.mediaId %>]]></MediaId>
       </Voice>
     <% } else if (msgType === 'video') { %>
       <Video>
-        <MediaId><![CDATA[<%= content.media_id %>]]></MediaId>
+        <MediaId><![CDATA[<%= content.mediaId %>]]></MediaId>
         <Title><![CDATA[<%= content.title %>]]></Title>
         <Description><![CDATA[<%= content.description %>]]></Description>
       </Video> 
@@ -31,7 +31,7 @@ var tpl = heredoc(function() {/*
         <Description><![CDATA[<%= content.discription %>]]></Description>
         <MusicUrl><![CDATA[<%= content.musicurl %>]]></MusicUrl>
         <HQMusicUrl><![CDATA[<%= content.hqmusicurl %>]]></HQMusicUrl>
-        <ThumbMediaId><![CDATA[<%= content.media_id %>]]></ThumbMediaId>
+        <ThumbMediaId><![CDATA[<%= content.mediaId %>]]></ThumbMediaId>
       </Music>
     <% } else if (msgType === 'news') { %>
       <ArticleCount><%= content.length %></ArticleCount>

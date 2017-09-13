@@ -4,8 +4,10 @@ var Promise = require('bluebird')
 var request = Promise.promisify(require('request'))
 var util = require('../libs/util')
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
+var fs = require('fs')
 var api = {
-  accessToken: prefix + 'token?grant_type=client_credential'
+  accessToken: prefix + 'token?grant_type=client_credential',
+  upload: 'http://file.api.weixin.qq.com/cgi-bin/media/upload?'
 }
 
 function Wechat(opts) {
@@ -14,6 +16,18 @@ function Wechat(opts) {
   this.appSecret = opts.appSecret
   this.getAccessToken = opts.getAccessToken
   this.saveAccessToken = opts.saveAccessToken
+
+  this.fetchAccessToken()
+  
+}
+
+Wechat.prototype.fetchAccessToken = function(data) {
+
+  if (this.access_token && this.expires_in) {
+    if (this.isValidAccessToken(this)) {
+      return Promise.resolve(this)
+    }
+  }
 
   this.getAccessToken()
     .then((data) => {
@@ -37,8 +51,10 @@ function Wechat(opts) {
       this.access_token = data.access_token
       this.expires_in = data.expires_in
       this.saveAccessToken(data)
+      return Promise.resolve(data)
     })
 }
+
 
 Wechat.prototype.isValidAccessToken = function(data) {
   if (!data || !data.access_token || !data.expires_in) {
@@ -66,6 +82,27 @@ Wechat.prototype.updateAccessToken = function() {
   })
 }
 
+Wechat.prototype.uploadMedia = function(type, filepath) {
+  var form = {
+    media: fs.createReadStream(filepath)
+  }
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = api.upload + 'access_token=' + data.access_token + '&type=' + type
+
+      request({method: 'POST', url: url, formData: form, json: true}).then((response) => {
+        var _data = response.body
+        if (_data) resolve(_data)
+        else throw new Error('Upload media fails')
+      })
+    })
+    .catch(function(err){reject(err)})
+  })
+}
+
 Wechat.prototype.reply = function() {
   var content = this.body
   var message = this.weixin
@@ -75,5 +112,7 @@ Wechat.prototype.reply = function() {
   this.type = 'application/xml'
   this.body = xml
 }
+
+
 
 module.exports = Wechat

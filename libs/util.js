@@ -89,5 +89,7 @@ exports.tpl = function(content, message) {
   info.toUserName = toUserName
   info.fromUserName = fromUserName
 
+  console.log(type, info)
+
   return tpl.compiled(info)
 }
