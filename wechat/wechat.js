@@ -4,7 +4,7 @@ var Promise = require('bluebird')
 var _ = require('lodash')
 var request = Promise.promisify(require('request'))
 var util = require('../libs/util')
-var prefix = 'https://api.weixin.qq.com/cgi-bin/'
+var prefix = 'http://file.api.weixin.qq.com/cgi-bin/'
 var fs = require('fs')
 var api = {
   accessToken: prefix + 'token?grant_type=client_credential',
@@ -13,8 +13,12 @@ var api = {
   },
   permanent: {
     uploadNews: prefix + 'material/add_news?',
+    fetch: prefix + 'material/get_material?',
     uploadNewsPic: prefix + 'media/uploadimg?',
-    upload: prefix + 'material/add_material?'
+    upload: prefix + 'material/add_material?',
+    delete: prefix + 'material/del_material?',
+    count: prefix + 'material/get_materialcount?',
+    batch: prefix + 'material/batchget_material?'
   }
 }
 
@@ -142,6 +146,104 @@ Wechat.prototype.uploadMedia = function(type, material, permanent) {
       })
     })
     .catch(function(err){reject(err)})
+  })
+}
+
+Wechat.prototype.fetchMedia = function(mediaId, type, permanent) {
+
+  var fetchUrl = api.temporary.fetch
+
+  if (permanent) {
+    fetchUrl = api.permanent.fetch
+  }
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = fetchUrl + 'access_token=' + data.access_token
+
+      var form = {}
+      var options = {method: 'POST', url: url, json: true}
+
+      if (permanent) {
+        form.media_id = mediaId
+        form.access_token = data.access_token
+        options.body = form
+      } else {
+        if (type === 'video') {
+          url = url.replace('https://', 'http://')
+        }
+        url += '&media_id=' + mediaId
+      }
+      
+      if (type === 'news' || type === 'video') {
+        request(options).then((response) => {
+          var _data = response.body
+          if (_data) resolve(_data)
+          else throw new Error('Fetch media fails')
+        })
+        .catch(function(err){reject(err)})
+      } else {
+        resolve(url)
+      }
+    })
+  })
+}
+
+Wechat.prototype.deleteMedia = function(mediaId) {
+
+  var form = {
+    media_id: mediaId
+  }
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = api.permanent.deleteMedia + 'access_token=' + data.access_token + '&media_id=' + mediaId
+      request({method: 'POST', url: url, body: form, json: true}).then((response) => {
+        var _data = response.body
+        if (_data) resolve(_data)
+        else throw new Error('Delete media fails')
+      })
+    })
+  })
+}
+
+Wechat.prototype.countMedia = function() {
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = api.permanent.count + 'access_token=' + data.access_token
+      request({method: 'GET', url: url, json: true}).then((response) => {
+        var _data = response.body
+        if (_data) resolve(_data)
+        else throw new Error('Count media fails')
+      })
+    })
+  })
+}
+
+Wechat.prototype.batchMedia = function(options) {
+
+  options.type = options.type || 'image'
+  options.offset = options.offset || 0
+  options.count = options.count || 1
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = api.permanent.batch + 'access_token=' + data.access_token
+      request({method: 'POST', url: url, body: options, json: true}).then((response) => {
+        var _data = response.body
+        if (_data) resolve(_data)
+        else throw new Error('Batch media fails')
+      })
+    })
   })
 }
 

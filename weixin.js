@@ -85,6 +85,37 @@ exports.reply = function *(next) {
         description: 'test video reply',
         mediaId: data.media_id
       }
+    } else if (content === '9') {
+      var picData = yield wechatApi.uploadMedia('image', __dirname + '/2.jpg', {})
+      var media = {
+        articles: [{
+          title: 'tututu',
+          thumbMediaId: picData.media_id,
+          author: 'Kian',
+          digest: '摘要',
+          show_cover_pic: 1,
+          content: 'test content',
+          content_source_url: 'https://github.com'
+        }]
+      }
+      data = yield wechatApi.uploadMedia('news', media, {})
+      data = yield wechatApi.fetchMedia(data.media_id, 'news', {})
+      console.log(data)
+      var item = data.news_item
+      var news = []
+
+      item.forEach(function(item) {
+        news.push({
+          title: item.title,
+          description: item.digest,
+          picurl: picData.url,
+          url: item.url
+        })
+      })
+      reply = news
+    } else if (content === 'b') {
+      var data = yield wechatApi.batchMedia({type: 'news'})
+      console.log(data)
     }
     this.body = reply
   } else {
