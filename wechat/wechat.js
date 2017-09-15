@@ -1,13 +1,21 @@
 'use strict'
 
 var Promise = require('bluebird')
+var _ = require('lodash')
 var request = Promise.promisify(require('request'))
 var util = require('../libs/util')
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
 var fs = require('fs')
 var api = {
   accessToken: prefix + 'token?grant_type=client_credential',
-  upload: 'http://file.api.weixin.qq.com/cgi-bin/media/upload?'
+  temporary: {
+    upload: 'http://file.api.weixin.qq.com/cgi-bin/media/upload?'
+  },
+  permanent: {
+    uploadNews: prefix + 'material/add_news?',
+    uploadNewsPic: prefix + 'media/uploadimg?',
+    upload: prefix + 'material/add_material?'
+  }
 }
 
 function Wechat(opts) {
@@ -82,18 +90,52 @@ Wechat.prototype.updateAccessToken = function() {
   })
 }
 
-Wechat.prototype.uploadMedia = function(type, filepath) {
-  var form = {
-    media: fs.createReadStream(filepath)
+Wechat.prototype.uploadMedia = function(type, material, permanent) {
+  var form = {}
+  var uploadUrl = api.temporary.upload
+
+  if (permanent) {
+    uploadUrl = api.permanent.upload
+
+    _.extend(form, permanent)
+  }
+
+  if (type === 'pic') {
+    uploadUrl = api.permanent.uploadNewsPic
+  }
+
+  if (type === 'news') {
+    uploadUrl = api.permanent.uploadNews
+    form = material
+  } else {
+    form.media = fs.createReadStream(material)
   }
 
   return new Promise((resolve, reject) => {
     this
     .fetchAccessToken()
     .then((data) => {
-      var url = api.upload + 'access_token=' + data.access_token + '&type=' + type
+      var url = uploadUrl + 'access_token=' + data.access_token
 
-      request({method: 'POST', url: url, formData: form, json: true}).then((response) => {
+      if (!permanent) {
+        url += '&type=' + type
+      } else {
+        form.access_token = data.access_token
+      }
+
+      var options = {
+        method: 'POST',
+        url: url,
+        json: true
+      }
+
+      if (type === 'news') {
+        options.body = form
+      } else {
+        options.formData = form
+      }
+
+      request(options).then((response) => {
         var _data = response.body
         if (_data) resolve(_data)
         else throw new Error('Upload media fails')
@@ -112,7 +154,5 @@ Wechat.prototype.reply = function() {
   this.type = 'application/xml'
   this.body = xml
 }
-
-
 
 module.exports = Wechat

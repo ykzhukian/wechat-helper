@@ -54,8 +54,38 @@ exports.reply = function *(next) {
         type: 'image',
         mediaId: data.media_id
       }
+    } else if (content === '5') {
+      var data = yield wechatApi.uploadMedia('video', __dirname + '/big_buck_bunny.mp4')
+      reply = {
+        type: 'video',
+        title: 'Big Buck Bunny',
+        description: 'test video reply',
+        mediaId: data.media_id
+      }
+    } else if (content === '6') {
+      // var data = yield wechatApi.uploadMedia('image', __dirname + '/2.jpg')
+      reply = {
+        type: 'music',
+        title: 'Music One',
+        description: 'test music reply',
+        musicurl: 'http://so1.111ttt.com:8282/2017/1/05m/09/298092036393.m4a?tflag=1501058362&pin=631f604479d1a4a2b8e66654463947fc&ip=114.82.246.122#.mp3',
+        thumbMediaId: ''
+      }
+    } else if (content === '7') {
+      var data = yield wechatApi.uploadMedia('image', __dirname + '/2.jpg', {type: 'image'})
+      reply = {
+        type: 'image',
+        mediaId: data.media_id
+      }
+    } else if (content === '8') {
+      var data = yield wechatApi.uploadMedia('video', __dirname + '/big_buck_bunny.mp4', {type: 'video', description: '{"title": "really nice video", "introduction":"good good well"}'})
+      reply = {
+        type: 'video',
+        title: 'Big Buck Bunny',
+        description: 'test video reply',
+        mediaId: data.media_id
+      }
     }
-
     this.body = reply
   } else {
     this.body = '你发了什么东西，我暂时看不懂'
