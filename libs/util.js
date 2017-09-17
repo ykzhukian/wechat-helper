@@ -4,6 +4,8 @@ var fs = require('fs')
 var Promise = require('bluebird')
 var xml2js = require('xml2js')
 var tpl = require('../wechat/tpl')
+var crypto = require('crypto')
+var request = Promise.promisify(require('request'))
 
 exports.readFileAsync = function(fpath, encoding) {
   return new Promise((resolve, reject) => {
@@ -15,7 +17,6 @@ exports.readFileAsync = function(fpath, encoding) {
 }
 
 exports.writeFileAsync = function(fpath, content) {
-  console.log('data saving: ', content)
   return new Promise((resolve, reject) => {
     fs.writeFile(fpath, content, function(err) {
       if (err) {
@@ -71,6 +72,31 @@ function formatMessage(result) {
 }
 
 exports.formatMessage = formatMessage
+
+exports.translateJp = function(text) {
+  var appid = '20170917000083414'
+  var secret = 'dJumhiugA_w0luh9zPPS'
+  var salt = Math.ceil(Math.random()*(10000000000-1000000000)+1000000000)
+  var str = appid + text + salt + secret
+  console.log(str)
+  var md5sum = crypto.createHash('md5')
+  md5sum.update(str)
+  var sign = md5sum.digest('hex')
+  console.log(sign)
+
+  var url = 'http://fanyi-api.baidu.com/api/trans/vip/translate?from=zh&to=jp&q=' + text + '&appid=20170917000083414&salt=' + salt + '&sign=' + sign
+
+  url = encodeURI(url)
+
+  return new Promise(function(resolve, reject) {
+    request({url: url}).then(function(response) {
+      var data = JSON.parse(response.body)
+      console.log(data.trans_result)
+      if (data.trans_result) resolve(data.trans_result)
+      else throw new Error('translate failed')
+    })
+  })
+}
 
 exports.tpl = function(content, message) {
   var info = {}

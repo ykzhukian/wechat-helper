@@ -9,7 +9,8 @@ var fs = require('fs')
 var api = {
   accessToken: prefix + 'token?grant_type=client_credential',
   temporary: {
-    upload: prefix + 'media/upload?'
+    upload: prefix + 'media/upload?',
+    fetch: prefix + 'media/get?'
   },
   permanent: {
     uploadNews: prefix + 'material/add_news?',
@@ -32,7 +33,6 @@ var api = {
 }
 
 function Wechat(opts) {
-  console.log(opts)
   this.appID = opts.appID
   this.appSecret = opts.appSecret
   this.getAccessToken = opts.getAccessToken
@@ -211,6 +211,23 @@ Wechat.prototype.uploadMedia = function(type, material, permanent) {
       })
     })
     .catch(function(err){reject(err)})
+  })
+}
+
+Wechat.prototype.fetchTempMedia = function(mediaId) {
+  var fetchUrl = api.temporary.fetch
+
+  return new Promise((resolve, reject) => {
+    this
+    .fetchAccessToken()
+    .then((data) => {
+      var url = fetchUrl + 'access_token=' + data.access_token + '&media_id=' + mediaId
+      request({method: 'GET', json: true, url: url}).then((response) => {
+        var _data = response.body
+        if (_data) resolve(_data)
+        else throw new Error('Fetch media fails')
+      })
+    })
   })
 }
 

@@ -3,6 +3,10 @@
 var config = require('../config')
 var Wechat = require('../wechat/wechat')
 var menu = require('./menu')
+var aipspeech = require('../libs/aipspeech')
+var util = require('../libs/util')
+var path = require('path')
+var voice_file = path.join(__dirname, '../medias/voice.amr')
 
 var wechatApi = new Wechat(config.wechat)
 
@@ -14,7 +18,7 @@ exports.reply = function *(next) {
       if (message.EventKey) {
         console.log('QR CODE: ' + message.EventKey + ' ' + message.Ticket)
       }
-      this.body = '你好，欢迎订阅'
+      this.body = '欢迎订阅 \n 现在我只会把你发的语音转成日文'
     } else if (message.Event === 'unsubscribe') {
       this.body = ''
       console.log('取关了')
@@ -59,9 +63,7 @@ exports.reply = function *(next) {
     var reply = '你好'
     if (content === '1') {
       reply = '一'
-    } else if (content === '2') {
-      reply = '二'
-    } else if (content === '3') {
+    } else if (content === 'news') {
       reply = [
         {
           title: '图文',
@@ -85,9 +87,15 @@ exports.reply = function *(next) {
     } 
     this.body = reply
   } else if (message.MsgType === 'voice') {
-
+    var mediaId = message.MediaId
+    var result = message.Recognition.replace('。', '')
+    var data = yield util.translateJp(result)
     
-
+    console.log(result)
+    var src = decodeURI(data[0].src)
+    var dst = decodeURI(data[0].dst)
+    var reply = src + ': \n' + dst
+    this.body = reply
   } else {
     this.body = '你发了什么东西，我暂时看不懂'
   }
