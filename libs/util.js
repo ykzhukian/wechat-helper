@@ -98,6 +98,20 @@ exports.translateJp = function(text) {
   })
 }
 
+exports.currencyJp = function() {
+  var appid = '3e4aa8aa9cac0d44dfed24a9e4568c7f'
+  var url = 'http://op.juhe.cn/onebox/exchange/currency?from=cny&to=jpy&key=' + appid
+
+  return new Promise(function(resolve, reject) {
+    request({url: url, method: 'GET', }).then(function(response) {
+      var data = JSON.parse(response.body)
+      if (data.result) resolve(data.result)
+      else throw new Error('get currency failed')
+    })
+  })
+
+}
+
 exports.tpl = function(content, message) {
   var info = {}
   var type = 'text'

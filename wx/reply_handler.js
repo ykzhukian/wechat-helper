@@ -15,7 +15,6 @@ function ReplyHandler(message) {
 
 ReplyHandler.prototype.reply = function() {
 
-  // 翻译：XXXX
   var category = this.checkMsgCategory()
 
   return new Promise((resolve, reject) => {
@@ -23,26 +22,42 @@ ReplyHandler.prototype.reply = function() {
     var data = '不太明白你的意思'
 
     if (this.message) {
-      if (this.message === '你是谁') {
-        
-      }
       if (category === 'translate') {
         data = this.translateReply()
+        resolve(data)
+      } else if (category === 'currency') {
+        this.currencyReply().then((data) => {
+          console.log(data)
+          data = [{
+          title: '日元-人民币 JPY-CNY ' + data[1].exchange,
+          description: '数据更新于：' + data[1].updateTime,
+          url: 'http://q.m.hexun.com/forex/price/2.html'
+          },{
+            title: '人民币-日元 CNY-JPY ' + data[0].exchange,
+            description: '数据更新于：' + data[0].updateTime,
+            url: 'http://q.m.hexun.com/forex/price/2.html'
+          }]
+          resolve(data)
+        })
       } else {
         data = this.aiReply()
+        resolve(data)
       }
     }
-
-    resolve(data)
   })
 }
 
 ReplyHandler.prototype.checkMsgCategory = function() {
 
   var translateIndex = this.message.indexOf('翻译')
+  var currencyIndex = this.message.indexOf('汇率')
 
   if (translateIndex > -1 && translateIndex < 5) {
     return 'translate'
+  } else if (currencyIndex > -1 && currencyIndex < 5) {
+    return 'currency'
+  } else {
+    return ''
   }
 }
 
@@ -57,6 +72,13 @@ ReplyHandler.prototype.translateReply = function() {
       var reply = src + ': \n' + dst
       resolve(reply)
     })
+  })
+}
+
+ReplyHandler.prototype.currencyReply = function() {
+  return new Promise((resolve, reject) => {
+    var data = util.currencyJp()
+    resolve(data)
   })
 }
 
