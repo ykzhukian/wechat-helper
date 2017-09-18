@@ -17,7 +17,6 @@ Ai.prototype.aiReply = function(message, userid) {
   return new Promise(function(resolve, reject) {
     request({url: url, json: true}).then(function(response) {
       var data = response.body.result.text
-      console.log(data)
       resolve(data)
     })
   })

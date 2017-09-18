@@ -2,14 +2,10 @@
 
 var config = require('../config')
 var Wechat = require('../wechat/wechat')
-var Ai = require('./ai')
 var menu = require('./menu')
-var util = require('../libs/util')
-var handler = require('./reply_handler')
+var ReplyHandler = require('./reply_handler')
 
 var wechatApi = new Wechat(config.wechat)
-var ai = new Ai()
-
 
 exports.reply = function *(next) {
   var message = this.weixin
@@ -19,7 +15,7 @@ exports.reply = function *(next) {
       if (message.EventKey) {
         console.log('QR CODE: ' + message.EventKey + ' ' + message.Ticket)
       }
-      this.body = '欢迎订阅 \n现在我只会把你发的语音转成日文'
+      this.body = '欢迎订阅'
     } else if (message.Event === 'unsubscribe') {
       this.body = ''
       console.log('取关了')
@@ -60,48 +56,23 @@ exports.reply = function *(next) {
       this.body = 'pic_weixin ' + message.EventKey
     } 
   } else if (message.MsgType === 'text') {
-    var content = message.Content
-    var reply = '你好'
-    if (content === '1') {
-      reply = '一'
-    } else if (content === 'news') {
-      reply = [
-        {
-          title: '图文',
-          description: '描述文字',
-          picurl: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1505910422&di=3fe25e2fa2cf89dee92cd799d76e4334&imgtype=jpg&er=1&src=http%3A%2F%2Fcdn.duitang.com%2Fuploads%2Fitem%2F201410%2F16%2F20141016152023_5vt4R.jpeg',
-          url: 'https://github.com'
-        },
-        {
-          title: '第二篇',
-          description: 'description 2 x x x x ! oh!',
-          picurl: 'https://b-ssl.duitang.com/uploads/item/201502/21/20150221220514_3sE8F.jpeg',
-          url: 'https://github.com'
-        }
-      ]
-    } else if (content === '4') {
-      var data = yield wechatApi.uploadMedia('image', __dirname + '/2.jpg')
-      reply = {
-        type: 'image',
-        mediaId: data.media_id
-      }
-    } 
-    this.body = reply
-  } else if (message.MsgType === 'voice') {
-    var mediaId = message.MediaId
-    var result = message.Recognition.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?|\。|\，|\？|\！]/g,"");
-    console.log(result)
-    
-    var data = yield ai.aiReply(result, message.FromUserName)
 
-    // var data = yield util.translateJp(result)
+    var handler = new ReplyHandler(message)
     
-    // console.log(result)
-    // var src = decodeURI(data[0].src)
-    // var dst = decodeURI(data[0].dst)
-    // var reply = src + ': \n' + dst
-    // this.body = reply
-    this.body = data
+    var data = yield handler.reply()
+    var reply = data
+    this.body = reply
+
+  } else if (message.MsgType === 'voice') {
+
+    message.Content = message.Recognition
+
+    var handler = new ReplyHandler(message)
+
+    var data = yield handler.reply()
+    var reply = data
+    this.body = reply
+
   } else {
     this.body = '你发了什么东西，我暂时看不懂'
   }
