@@ -2,13 +2,14 @@
 
 var config = require('../config')
 var Wechat = require('../wechat/wechat')
+var Ai = require('./ai')
 var menu = require('./menu')
-var aipspeech = require('../libs/aipspeech')
 var util = require('../libs/util')
-var path = require('path')
-var voice_file = path.join(__dirname, '../medias/voice.amr')
+var handler = require('./reply_handler')
 
 var wechatApi = new Wechat(config.wechat)
+var ai = new Ai()
+
 
 exports.reply = function *(next) {
   var message = this.weixin
@@ -18,7 +19,7 @@ exports.reply = function *(next) {
       if (message.EventKey) {
         console.log('QR CODE: ' + message.EventKey + ' ' + message.Ticket)
       }
-      this.body = '欢迎订阅 \n 现在我只会把你发的语音转成日文'
+      this.body = '欢迎订阅 \n现在我只会把你发的语音转成日文'
     } else if (message.Event === 'unsubscribe') {
       this.body = ''
       console.log('取关了')
@@ -88,14 +89,19 @@ exports.reply = function *(next) {
     this.body = reply
   } else if (message.MsgType === 'voice') {
     var mediaId = message.MediaId
-    var result = message.Recognition.replace('。', '')
-    var data = yield util.translateJp(result)
-    
+    var result = message.Recognition.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?|\。|\，|\？|\！]/g,"");
     console.log(result)
-    var src = decodeURI(data[0].src)
-    var dst = decodeURI(data[0].dst)
-    var reply = src + ': \n' + dst
-    this.body = reply
+    
+    var data = yield ai.aiReply(result, message.FromUserName)
+
+    // var data = yield util.translateJp(result)
+    
+    // console.log(result)
+    // var src = decodeURI(data[0].src)
+    // var dst = decodeURI(data[0].dst)
+    // var reply = src + ': \n' + dst
+    // this.body = reply
+    this.body = data
   } else {
     this.body = '你发了什么东西，我暂时看不懂'
   }
