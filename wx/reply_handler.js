@@ -16,12 +16,25 @@ function ReplyHandler(message) {
 ReplyHandler.prototype.reply = function() {
 
   var category = this.checkMsgCategory()
+  var whatname = false
+  if (this.message.indexOf('你叫什么') > -1 || 
+      this.message.indexOf('你是谁') > -1 ||
+      this.message.indexOf('你的名字') > -1 ||
+      this.message.indexOf('你是哪位') > -1 ||
+      this.message.indexOf('你哪位') > -1 ||
+      this.message.indexOf('你名字') > -1 ||
+      this.message.indexOf('怎么称呼') > -1
+    ) {whatname = true}
 
   return new Promise((resolve, reject) => {
 
     var data = '不太明白你的意思'
 
     if (this.message) {
+      if (whatname) {
+        data = '我叫MAIMAX'
+        resolve(data)
+      }
       if (category === 'translate') {
         data = this.translateReply()
         resolve(data)
