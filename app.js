@@ -1,6 +1,15 @@
-'use strict'
+'use strict';
 
-var Koa = require('koa')
+const path = require('path');
+
+const AV = require('leanengine');
+const Koa = require('koa');
+const Router = require('koa-router');
+const views = require('koa-views');
+const statics = require('koa-static');
+const bodyParser = require('koa-bodyparser');
+const co = require('koa-convert');
+
 var wechat = require('./wechat/g')
 var config = require('./config')
 var util = require('./libs/util')
@@ -14,80 +23,30 @@ var crypto = require('crypto')
 
 var heredoc = require('heredoc')
 
-var tpl = heredoc(function() {/*
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <title>搜电影</title>
-      <meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1" />
-    </head>
-    <body>
-      <h1>点击标题，开始录制翻译</h1>
-      <p id="title"></p>
-      <div id="poster"></div>
-      <div id="year"></div>
-      <div id="director"></div>
-      <script src="https://cdn.bootcss.com/zepto/1.2.0/zepto.js"></script>
-      <script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
-      <script>
-        wx.config({
-          debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-          appId: 'wxda1ef7ca71651c91', // 必填，公众号的唯一标识
-          timestamp: '<%= timestamp %>', // 必填，生成签名的时间戳
-          nonceStr: '<%= nonceStr %>', // 必填，生成签名的随机串
-          signature: '<%= signature %>',// 必填，签名，见附录1
-          jsApiList: [
-            'startRecord',
-            'stopRecord',
-            'onVoiceRecordEnd',
-            'translateVoice'
-          ] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
-        });
-        wx.ready(function(){
-          wx.checkJsApi({
-            jsApiList: ['onVoiceRecordEnd'], // 需要检测的JS接口列表，所有JS接口列表见附录2,
-            success: function(res) {
-              console.log(res)
-              // 以键值对的形式返回，可用的api值true，不可用为false
-              // 如：{"checkResult":{"onVoiceRecordEnd":true},"errMsg":"checkJsApi:ok"}
-            }
-          });
-          
-          var isRecording = false
-          $('h1').on('click', function() {
-            console.log('clicked')
-            if (!isRecording) {
-              isRecording = true
-              wx.startRecord({
-                cancel: function() {
-                  window.alert('那就不能搜了哦')
-                }
-              })
-              return
-            }
+// 加载云函数定义，你可以将云函数拆分到多个文件方便管理，但需要在主文件中加载它们
+require('./cloud');
 
-            isRecording = false
-            wx.stopRecord({
-              success: function(res) {
-                var localId = res.localId
+// // 设置模版引擎
+// app.use(views(path.join(__dirname, 'views')));
 
-                wx.translateVoice({
-                  localId: localId,
-                  isShowProgressTips: 1,
-                  success: function(res) {
-                    window.alert(res.translateResult)
-                  }
-                })
-              }
-            })
-            
-          })
+// // 设置静态资源目录
+// app.use(statics(path.join(__dirname, 'public')));
 
-        });
-      </script>
-    </body>
-  </html>
-*/})
+// const router = new Router();
+// app.use(router.routes());
+
+// 加载云引擎中间件
+app.use(co(AV.koa()));
+
+app.use(bodyParser());
+
+// router.get('/', async function(ctx) {
+//   ctx.state.currentTime = new Date();
+//   await ctx.render('./index.ejs');
+// });
+
+// 可以将一类的路由单独保存在一个文件中
+// app.use(require('./routes/todos').routes());
 
 var createNonceStr = function() {
   return Math.random().toString(36).substr(2, 15)
@@ -122,25 +81,6 @@ function sign(ticket, url) {
   }
 }
 
-app.use(function *(next) {
-  if (this.url.indexOf('/movie') > -1) {
-    var wechatApi = new Wechat(config.wechat)
-    var data = yield wechatApi.fetchAccessToken()
-    var access_token = data.access_token
-    var ticketData = yield wechatApi.fetchTicket(access_token)
-    var ticket = ticketData.ticket
-    var url = this.href.replace(':8000', '')
-    var params = sign(ticket, url)
-    
-    console.log(params)
-    this.body = ejs.render(tpl, params)
+app.use(co(wechat(config.wechat, weixin.reply)))
 
-    return next
-  }
-  yield next
-})
-
-app.use(wechat(config.wechat, weixin.reply))
-
-app.listen(8080)
-console.log('Listening 8080')
+module.exports = app;
