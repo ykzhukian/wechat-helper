@@ -2,6 +2,7 @@
 
 var Promise = require('bluebird')
 var Ai = require('./ai')
+var LeanStorage = require('./leanstorage')
 var util = require('../libs/util')
 
 function ReplyHandler(message) {
@@ -33,30 +34,21 @@ ReplyHandler.prototype.reply = function() {
     if (this.message) {
       if (whatname) {
         data = '我叫MAIMAX'
-        resolve(data)
       }
       if (category === 'translate') {
         data = this.translateReply()
-        resolve(data)
       } else if (category === 'currency') {
-        this.currencyReply().then((data) => {
-          console.log(data)
-          data = [{
-          title: '日元-人民币 JPY-CNY ' + data[1].exchange,
-          description: '数据更新于：' + data[1].updateTime,
-          url: 'http://q.m.hexun.com/forex/price/2.html'
-          },{
-            title: '人民币-日元 CNY-JPY ' + data[0].exchange,
-            description: '数据更新于：' + data[0].updateTime,
-            url: 'http://q.m.hexun.com/forex/price/2.html'
-          }]
-          resolve(data)
-        })
+        data = this.currencyReply()
+      } else if (category === 'account') {
+
+        var leanstorage = new LeanStorage()
+        data = '👌'
+
       } else {
         data = this.aiReply()
-        resolve(data)
       }
     }
+    resolve(data)
   })
 }
 
@@ -64,11 +56,14 @@ ReplyHandler.prototype.checkMsgCategory = function() {
 
   var translateIndex = this.message.indexOf('翻译')
   var currencyIndex = this.message.indexOf('汇率')
+  var accountIndex = this.message.indexOf('记账')
 
   if (translateIndex > -1 && translateIndex < 5) {
     return 'translate'
   } else if (currencyIndex > -1 && currencyIndex < 5) {
     return 'currency'
+  } else if (accountIndex > -1 && accountIndex < 5) {
+    return 'account'
   } else {
     return ''
   }
@@ -89,6 +84,23 @@ ReplyHandler.prototype.translateReply = function() {
 }
 
 ReplyHandler.prototype.currencyReply = function() {
+  return new Promise((resolve, reject) => {
+    this.currency().then((data) => {
+      data = [{
+      title: '日元-人民币 JPY-CNY ' + data[1].exchange,
+      description: '数据更新于：' + data[1].updateTime,
+      url: 'http://q.m.hexun.com/forex/price/2.html'
+      },{
+        title: '人民币-日元 CNY-JPY ' + data[0].exchange,
+        description: '数据更新于：' + data[0].updateTime,
+        url: 'http://q.m.hexun.com/forex/price/2.html'
+      }]
+      resolve(data)
+    })
+  })
+}
+
+ReplyHandler.prototype.currency = function() {
   return new Promise((resolve, reject) => {
     var data = util.currencyJp()
     resolve(data)
