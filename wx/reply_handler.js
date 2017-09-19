@@ -24,6 +24,7 @@ ReplyHandler.prototype.reply = function() {
       this.message.indexOf('你是哪位') > -1 ||
       this.message.indexOf('你哪位') > -1 ||
       this.message.indexOf('你名字') > -1 ||
+      this.message.indexOf('你到底是谁') > -1 ||
       this.message.indexOf('怎么称呼') > -1
     ) {whatname = true}
 
@@ -33,17 +34,17 @@ ReplyHandler.prototype.reply = function() {
 
     if (this.message) {
       if (whatname) {
-        data = '我叫MAIMAX'
+        data = '我叫MAIMAX 🤖'
+        return resolve(data)
       }
       if (category === 'translate') {
         data = this.translateReply()
       } else if (category === 'currency') {
         data = this.currencyReply()
       } else if (category === 'account') {
-
-        var leanstorage = new LeanStorage()
-        data = '👌'
-
+        data = this.accountReply()
+      } else if (category === 'review') {
+        data = this.todaysumReply()
       } else {
         data = this.aiReply()
       }
@@ -57,6 +58,7 @@ ReplyHandler.prototype.checkMsgCategory = function() {
   var translateIndex = this.message.indexOf('翻译')
   var currencyIndex = this.message.indexOf('汇率')
   var accountIndex = this.message.indexOf('记账')
+  var reviewIndex = this.message.indexOf('查账')
 
   if (translateIndex > -1 && translateIndex < 5) {
     return 'translate'
@@ -64,6 +66,8 @@ ReplyHandler.prototype.checkMsgCategory = function() {
     return 'currency'
   } else if (accountIndex > -1 && accountIndex < 5) {
     return 'account'
+  } else if (reviewIndex > -1 && reviewIndex < 5) {
+    return 'review'
   } else {
     return ''
   }
@@ -100,6 +104,32 @@ ReplyHandler.prototype.currencyReply = function() {
   })
 }
 
+ReplyHandler.prototype.accountReply = function() {
+  return new Promise((resolve, reject) => {
+    this.prepareAccount()
+    .then((data) => {
+      if (data !== '没听清内容') {
+        data = this.account(data.name, data.price)
+      }
+      resolve(data)
+    })
+  })
+}
+
+ReplyHandler.prototype.todaysumReply = function() {
+  return new Promise((resolve, reject) => {
+    this.todaysum()
+    .then((data) => {
+      data = [{
+        title: '今天共花了：' + data + 'JPY 💰',
+        description: '点击获取更多信息',
+        url: 'http://832570aa.ngrok.io/review'
+      }]
+      resolve(data)
+    })
+  })
+}
+
 ReplyHandler.prototype.currency = function() {
   return new Promise((resolve, reject) => {
     var data = util.currencyJp()
@@ -110,6 +140,47 @@ ReplyHandler.prototype.currency = function() {
 ReplyHandler.prototype.translate = function(text) {
   return new Promise((resolve, reject) => {
     var data = util.translateJp(text)
+    resolve(data)
+  })
+}
+
+ReplyHandler.prototype.todaysum = function() {
+  return new Promise((resolve, reject) => {
+    var re = new LeanStorage()
+    var sum = re.todaysum()
+    resolve(sum)
+  })
+}
+
+ReplyHandler.prototype.prepareAccount = function() {
+  return new Promise((resolve, reject) => {
+    var string = this.message.replace('记账', '')
+    var nameIndex = string.indexOf('内容')
+    if (nameIndex < 0) {
+      var data = '没听清内容'
+      return resolve(data)
+    }
+    var name = string.slice(nameIndex + 2)
+    var price = 0
+    if (this.msgType === 'voice') {
+      price = util.chineseToNum(string)
+    } else {
+      price = string.replace(/[^0-9]/g, '')
+    }
+    var data = {
+      price: parseInt(price),
+      name: name
+    }
+    console.log(data)
+    resolve(data)
+  })
+}
+
+ReplyHandler.prototype.account = function(name, price) {
+  return new Promise((resolve, reject) => {
+    var leanstorage = new LeanStorage()
+    leanstorage.addItem(name, price)
+    var data = '记好了：' + name + ' ' + price + 'JPY ' + '👌'
     resolve(data)
   })
 }
