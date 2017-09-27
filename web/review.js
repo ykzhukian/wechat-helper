@@ -5,6 +5,9 @@ var config = require('../config')
 var util = require('../libs/util')
 var Wechat = require('../wechat/wechat')
 var LeanStorage = require('../wx/leanstorage')
+var fs = require('fs')
+var path = require('path')
+var wechat_verify_file = path.join(__dirname, 'MP_verify_HRCCb9RDiuBLZZON.txt')
 
 var ejs = require('ejs')
 var crypto = require('crypto')
@@ -71,7 +74,6 @@ module.exports = function() {
       params.items = yield leanstorage.fetchItems()
       params.days_left = 23 - today < 0 ? 13 : 23 - today
       
-      console.log(params)
       this.body = ejs.render(tpl.tpl, params)
       return next
 
@@ -81,6 +83,10 @@ module.exports = function() {
       var objId = urlParams.obj
       yield leanstorage.deleteItem(objId)
       this.body = "<h1 style='text-align: center; margin-top: 50px;'>DONE</h1><h1 style='text-align: center; margin-top: 50px;'><a href='http://832570aa.ngrok.io/review'>BACK</a></h1>"
+      return next
+    } else if (this.url.indexOf('MP_verify_HRCCb9RDiuBLZZON') > -1) {
+      console.log(wechat_verify_file)
+      this.body = yield util.readFileAsync(wechat_verify_file)
       return next
     }
     yield next
