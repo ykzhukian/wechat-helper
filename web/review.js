@@ -67,7 +67,9 @@ module.exports = function() {
       var ticket = ticketData.ticket
       var url = this.href.replace(':3000', '')
       var params = sign(ticket, url)
+      var today = new Date().getDate()
       params.items = yield leanstorage.fetchItems()
+      params.days_left = 23 - today < 0 ? 13 : 23 - today
       
       console.log(params)
       this.body = ejs.render(tpl.tpl, params)

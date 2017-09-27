@@ -1,7 +1,5 @@
 'use strict'
 
-const path = require('path')
-
 const AV = require('leanengine')
 const Koa = require('koa')
 const Router = require('koa-router')

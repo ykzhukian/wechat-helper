@@ -13,7 +13,7 @@ module.exports = {
       'url': 'http://github.com/',
     }, {
       'type': 'scancode_push',
-      'name': '扫码推送事件嗯嗯',
+      'name': '扫码推送事件',
       'key': 'qr_scan'
     }, {
       'type': 'scancode_waitmsg',

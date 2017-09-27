@@ -54,6 +54,7 @@ LeanStorage.prototype.fetchItems = function() {
   var query = new AV.Query('jp_items');
   var items = []
   var sum = 0
+  query.descending('createdAt');
   return query.find().then(function (results) {
     results.map((item, index)=> {
       sum += item.attributes.price
