@@ -73,7 +73,14 @@ module.exports = function() {
       
       console.log(params)
       this.body = ejs.render(tpl.tpl, params)
+      return next
 
+    } else if (this.url.indexOf('/delete') > -1) {
+      var leanstorage = new LeanStorage()
+      var urlParams = util.getUrlParams(this.url)
+      var objId = urlParams.obj
+      yield leanstorage.deleteItem(objId)
+      this.body = "<h1 style='text-align: center; margin-top: 50px;'>DONE</h1>"
       return next
     }
     yield next

@@ -24,6 +24,20 @@ LeanStorage.prototype.addItem = function(name, price) {
   })
 }
 
+LeanStorage.prototype.deleteItem = function(objId) {
+
+  return new Promise((resolve, reject) => {
+    var Item = AV.Object.createWithoutData('jp_items', objId);
+    Item.destroy().then(function (success) {
+      // 删除成功
+      console.log('delete success')
+      resolve(objId)
+    }, function (error) {
+      // 删除失败
+    });
+  })
+}
+
 LeanStorage.prototype.todaysum = function() {
   var todayStart = new Date().setHours(0,0,0,0)
   var todayEnd = new Date().setHours(23,59,59,59)
@@ -59,6 +73,7 @@ LeanStorage.prototype.fetchItems = function() {
     results.map((item, index)=> {
       sum += item.attributes.price
       item.attributes.date = new Date(item.createdAt).setHours(0,0,0,0)
+      item.attributes.objId = item.id
       items.push(item.attributes)
     })
   }, function (error) {
