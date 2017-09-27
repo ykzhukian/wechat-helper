@@ -23,7 +23,7 @@ exports.tpl = heredoc(function() {/*
           <% } %>
           <div class="items-wrapper">
             <p class="item"><%= item.name %> 
-              <span class="float-right"><a class="delete-button" href="http://832570aa.ngrok.io/delete?obj=<%= item.objId %>">删除</a></span>
+              <span class="float-right"><a class="delete-button" href="http://maimax.leanapp.cn/delete?obj=<%= item.objId %>">删除</a></span>
               <span class="float-right" style="margin-right: 10px;"><%= item.price %> <i><small>JPY</i></small></span>
             </p>
           </div>

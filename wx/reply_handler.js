@@ -123,7 +123,7 @@ ReplyHandler.prototype.todaysumReply = function() {
       data = [{
         title: '今天共花了：' + data + 'JPY 💰',
         description: '点击获取更多信息',
-        url: 'http://832570aa.ngrok.io/review'
+        url: 'http://maimax.leanapp.cn/review'
       }]
       resolve(data)
     })
