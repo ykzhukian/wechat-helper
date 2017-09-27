@@ -80,7 +80,7 @@ module.exports = function() {
       var urlParams = util.getUrlParams(this.url)
       var objId = urlParams.obj
       yield leanstorage.deleteItem(objId)
-      this.body = "<h1 style='text-align: center; margin-top: 50px;'>DONE</h1>"
+      this.body = "<h1 style='text-align: center; margin-top: 50px;'>DONE</h1><h1 style='text-align: center; margin-top: 50px;'><a href='http://832570aa.ngrok.io/review'>BACK</a></h1>"
       return next
     }
     yield next
