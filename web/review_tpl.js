@@ -50,12 +50,13 @@ exports.tpl = heredoc(function() {/*
         padding: 10px;
         background-color: #fefefe;
         z-index: 999;
+        height: 100px;
       }
       h4 {
         margin: 5px 0;
       }
       .content-wrapper {
-        margin-top: 88px;
+        margin-top: 100px;
       }
       .float-right {
         float: right;
@@ -67,7 +68,7 @@ exports.tpl = heredoc(function() {/*
       }
       .sticky {
         position: fixed;
-        top: 88px;
+        top: 100px;
         left: 0;
       }
       .delete-button {
@@ -113,9 +114,9 @@ exports.tpl = heredoc(function() {/*
         date.map((index, date) => {
           datePos = positions[index]
           windowsPos = $('body').scrollTop()
-          if (windowsPos + 88 > datePos) {
+          if (windowsPos + 100 > datePos) {
             $(date).addClass('sticky')
-            $(date).next('.items-wrapper').css('padding-top', '17px')
+            $(date).next('.items-wrapper').css('padding-top', '23px')
             console.log('date pos: ', datePos)
             console.log('windows pos: ', windowsPos)
           } else if (windowsPos + 55 < datePos) {
