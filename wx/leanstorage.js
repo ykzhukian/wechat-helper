@@ -69,6 +69,7 @@ LeanStorage.prototype.fetchItems = function() {
   var items = []
   var sum = 0
   query.descending('createdAt');
+  query.limit(1000);// 最多返回 10 条结果
   return query.find().then(function (results) {
     results.map((item, index)=> {
       sum += item.attributes.price
